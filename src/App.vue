@@ -1,13 +1,11 @@
 <template>
   <header>
     <title>{{ auther }}'s blog</title>
-    <div id="top">
-      <img id="logo" class="uns" src="/favicon.webp">
-      <b id="logo-text" class="uns">{{ auther }}'s blog</b>
-      <a id="github" :href="github" target="_blank" style="">
-        <img class="uns" src="/svg/github-mark-white.svg" id="github-icon">
-      </a>
-    </div>
+    <Top :auther="auther" :github="github">
+        <b class="uns">主页</b>
+        <b class="uns">文章</b>
+        <b class="uns">分类</b>
+    </Top>
   </header>
   <main>
     <div class="page">
@@ -21,17 +19,20 @@
         <div class="right">
           <el-timeline>
             <el-timeline-item v-for="item in timeline" :timestamp="item.time" placement="top">
-              <div v-html="item.title" class="timeline-card">
+              <div class="timeline-card">
+                <h4>{{ item.title }}</h4>
               </div>
             </el-timeline-item>
           </el-timeline>
         </div>
         <div class="left">
-          <img :src="snack" width="100%"/>
+          <img :src="snack" width="100%">
+          <img src="https://skillicons.dev/icons?i=cpp,py,latex,html,css,js,vscode&theme=light">
         </div>
       </div>
     </div>
     <div class="background" :style="{'background-image': 'url(' + background + ')'}">
+      <a name="blog"/>
       <p>blog</p>
       <div class="post uns">
         <img class="uns" src="/image/background_head.jpg"> 
@@ -44,11 +45,12 @@
 
 <script>
 import yaml from 'js-yaml';
-import $ from 'jquery';
+import $ from 'cash-dom';
 import axios from 'axios'
-import { marked } from 'marked';
-import hljs from 'highlight.js'
-import 'highlight.js/styles/github-dark.min.css'
+// import { Marked } from 'marked';
+// import { markedHighlight } from 'marked-highlight';
+// import hljs from 'highlight.js'
+// import 'highlight.js/styles/github-dark.min.css'
 export default {
   name: 'MyApp',
   data() {
@@ -69,37 +71,39 @@ export default {
   },
   methods: {
     getData: function() {
-      axios.get('/config.yml')
+      axios.get('./config.yml')
       .then(res => {
         const parsedConfig = yaml.load(res.data);
         this.auther = parsedConfig.auther;
         this.github = parsedConfig.github;
-        this.background = parsedConfig.background;
-        this.head_image = parsedConfig.head_image;
-        this.avatar = parsedConfig.avatar;
+        this.background = parsedConfig.cdn + parsedConfig.background;
+        this.head_image = parsedConfig.cdn + parsedConfig.head_image;
+        this.avatar = parsedConfig.cdn + parsedConfig.avatar;
         this.snack = parsedConfig.snack;
         this.tags = parsedConfig.tags;
       })
-      axios.get('/timeline.yml')
+      axios.get('./timeline.yml')
       .then(res => {
+        console.log(window.location.hash);
         const parsedConfig = yaml.load(res.data);
         this.timeline = parsedConfig.all;
-        const render = new marked.Renderer();
-        marked.setOptions({
-          renderer: render,
-          gfm: true,
-          pedantic: false,
-          sanitize: false,
-          highlight: (code, lang) => hljs.highlight(code, { language: lang }).value,
-        });
-        for(var i in this.timeline) {
-          console.log(this.timeline[i].title);
-          this.timeline[i].title = marked(this.timeline[i].title);
-        }
+        // const marked = new Marked(
+        //   markedHighlight({
+        //     langPrefix: 'hljs language-',
+        //     highlight(code, lang, info) {
+        //       const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+        //       return hljs.highlight(code, { language }).value;
+        //     }
+        //   })
+        // );
+        // for(var i in this.timeline) {
+        //   console.log(marked.parse(this.timeline[i].title));
+        //   this.timeline[i].title = marked.parse(this.timeline[i].title);
+        // }
       })
     },
     unsClass: function() {
-      $(document).ready(function() {
+      $(function() {
         $(".uns").attr({draggable: "false"})
       });
     }
@@ -111,10 +115,14 @@ export default {
 <script setup>
 import { ElLoading } from 'element-plus';
 import 'element-plus/es/components/button/style/css'
-const loadingInstance1 = ElLoading.service({ background: 'rgba(0, 0, 0, 0.7)', fullscreen: true });
-$(document).ready(function() {
-  loadingInstance1.close();
-})
+import Top from "./Top.vue";
+//const loadingInstance1 = ElLoading.service({ background: 'rgba(0, 0, 0, 0.7)', fullscreen: true });
+document.onreadystatechange = function() {
+  if(document.readyState == "complete")
+  { 
+    //loadingInstance1.close();
+  }
+} 
 </script>
 
 <style>
@@ -138,7 +146,7 @@ $(document).ready(function() {
     position: relative;
     background-position: center center;
     background-repeat: no-repeat;
-    background-size: auto 100%;
+    background-size: cover;
     background-color: #464646;
     background-attachment: fixed;
     padding: 0 20%;
@@ -210,46 +218,8 @@ $(document).ready(function() {
     object-fit: cover;
     height: 100%;
   }
-  #top {
-    position: fixed;
-    height: 60px;
-    z-index: 999;
-    width: 100%;
-    backdrop-filter: blur(10px);
-    border-bottom: 2px #FFFFFF30 solid;
-    background-color: #00000030;
-  }
   #head {
     height: 40%;
-  }
-  #logo {
-    position: absolute;
-    height: 40px;
-    top: 10px;
-    left: calc(10% + 10px);
-  }
-  #logo-text {
-    position: absolute;
-    color: white;
-    font-size: 20px;
-    left: calc(10% + 60px);
-    top: 10px;
-    margin-top: 0;
-    font-family: 'font1';
-  }
-  #github {
-    position: absolute;
-    z-index: 1000;
-    top: 15px;
-    height: 30px;
-    width: 30px;
-    right: 15px;
-  }
-  #github-icon {
-    margin-top: 0;
-    margin-right: 0;
-    height: 30px;
-    width: 30px;
   }
   #background_img {
     position: absolute;
@@ -288,6 +258,13 @@ $(document).ready(function() {
     float: left;
     width: 45%;
     left: 10%;
+  }
+  .left > img {
+    position: relative;
+    max-width: 100%;
+    left: 50%;
+    transform: translate(-50%, 0);
+    margin-bottom: 30px;
   }
   .timeline-card {
     width: 100%;
